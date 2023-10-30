@@ -7,26 +7,27 @@ import { Navigate } from 'react-router-dom';
 export default class CreatePersonaje extends Component {
 
   state = {
-    status: false
+    status: false,
+    series: [],
+    statusSerie: false
   }
 
-  cajaId = React.createRef();
   cajaNombre = React.createRef();
   cajaImagen = React.createRef();
   cajaIdSerie = React.createRef();
 
-  selectSerie = () => {
-    
-  }
+
 
   insertarPersonaje = (e) => {
     e.preventDefault();
-    var id = parseInt(this.cajaId.current.value);
+    var request = "api/personajes";
+    var url = Global.urlApiSerie;
+
     var nombre = this.cajaNombre.current.value;
     var imagen = this.cajaImagen.current.value;
     var idSerie = parseInt(this.cajaIdSerie.current.value);
 
-    if (!id || !nombre || !imagen || !idSerie) {
+    if (!nombre || !imagen || !idSerie) {
       Swal.fire({
         icon: 'error',
         title: 'Error',
@@ -34,19 +35,17 @@ export default class CreatePersonaje extends Component {
       });
       return null;
     }
+
     var personaje = {
-      id: id,
+      idPersonaje: 0,
       nombre: nombre,
       imagen: imagen,
       idSerie: idSerie
     }
     console.log(personaje);
 
-    var request = "api/personajes";
-    var url = Global.urlApiSerie + request;
-    axios.post(url, personaje).then(response => {
-      console.log("respuesta", response);
-
+    axios.post(url + request, personaje).then((response) => {
+      this.setState({ status: true });
       Swal.fire({
         icon: 'success',
         title: `${personaje.nombre}` + " fue añadido con éxito",
@@ -67,39 +66,62 @@ export default class CreatePersonaje extends Component {
 
   }
 
+  loadSeries = () => {
+    var request = "api/series";
+    var url = Global.urlApiSerie;
+
+    axios.get(url + request).then((response) => {
+      console.log(response);
+
+      this.setState({
+        series: response.data,
+        statusSerie: true
+      })
+    })
+  }
+
+  componentDidMount = () => {
+    this.loadSeries();
+  }
+
   render() {
     return (
-      <div className="container">
+      <div className="container pt-5" >
         {
           this.state.status == true &&
-          <Navigate to='/' />
+          (
+            <Navigate to="/" />
+          )
         }
-        <h1 className="text-white">Crear personaje</h1>
+        < h1 > Crear Personaje</h1><hr />
         <form onSubmit={this.insertarPersonaje}>
-          <div className="mb-3">
-            <label htmlFor="id" className="form-label" style={{ color: 'black', fontSize: '20px' }}><strong>ID:</strong></label>
-            <input type="number" id="id" ref={this.cajaId} placeholder='ID' className="form-control" />
+          <div className="row g-3">
+            <div className="col">
+              <label htmlFor='nombre'>Nombre:</label>
+              <input ref={this.cajaNombre} type="text" className="form-control" placeholder="nombre.." />
+            </div>
+            <div className="col">
+              <label htmlFor='imagen'>Imagen:</label>
+              <input ref={this.cajaImagen} type="file" className="form-control" placeholder="imagen.." />
+            </div>
+            <div className="col">
+              <label htmlFor='series'>Serie:</label>
+              <select id='series' ref={this.cajaIdSerie} className="form-control">
+                {
+                  this.state.statusSerie == true &&
+                  (
+                    this.state.series.map((serie, index) => {
+                      return (<option key={index} value={serie.idSerie}>{serie.nombre}</option>)
+                    })
+                  )
+                }
+              </select>
+            </div>
           </div>
-
-          <div className="mb-3">
-            <label htmlFor="nombre" className="form-label" style={{ color: 'black', fontSize: '20px' }}><strong>Nombre de Personaje:</strong></label>
-            <input type="text" id="nombre" ref={this.cajaNombre} placeholder='Nombre' className="form-control" />
-          </div>
-
-          <div className="mb-3">
-            <label htmlFor="imagen" className="form-label" style={{ color: 'black', fontSize: '20px' }}><strong>Imagen:</strong></label>
-            <input type="file" id="imagen" ref={this.cajaImagen} placeholder='Imagen' className="form-control" />
-
-          </div>
-
-          <div className="mb-3">
-            <label htmlFor="idSerie" className="form-label" style={{ color: 'black', fontSize: '20px' }}><strong>Id serie:</strong></label>
-            <input type="text" id="idSerie" ref={this.cajaIdSerie} placeholder='idSerie' className="form-control" />
-          </div>
-
-          <button className="btn btn-success">Insertar</button>
+          <button className="btn btn-outline-success"> Guardar </button>
         </form>
-      </div>
+      </div >
     )
   }
+
 }
